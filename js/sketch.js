@@ -19,6 +19,7 @@ function getRandomColor(){
     return 'rgb(' + r + ',' + g + ',' + b + ')';
 }
 var debugColors = false;
+
 ctx.fillStyle = debugColors? "yellow": getRandomColor();
 ctx.fillRect(0, 0, sz, sz);
 
@@ -40,11 +41,47 @@ for(var x = 0; x * scale * psize < sz; x+=step){
     }
 }
 
+//var texture = new THREE.TextureLoader().load("assets/uvs.png");
+var texture = new THREE.TextureLoader().load(canvas.toDataURL());
+texture.wrapS = THREE.MirroredRepeatWrapping;
+texture.wrapT = THREE.MirroredRepeatWrapping;
+texture.repeat.set(2, 1);
 
-//if(!debugColors && Math.random() > 0.3 ) ctx.globalCompositeOperation = 'lighter'; 
-//ctx.globalCompositeOperation = 'lighter';
+var geometry = new THREE.SphereGeometry(30, 50, 50);
+//var material = new THREE.MeshNormalMaterial();
+var material = new THREE.MeshLambertMaterial( {color: 0xffffff, map: texture});
+
+//material.flatShading = true;
+var obj = new THREE.Mesh( geometry, material );
+scene.add( obj );
+
+camera.position.z = 80;
+var stats = new Stats();
+stats.showPanel(2);
+document.body.appendChild( stats.dom );
+
+var light = new THREE.PointLight( 0xffffff, 1, 300);
+light.position.set(40, 40, 70);
+scene.add(light);
+
+var skycanvas = document.createElement('canvas');
+document.body.appendChild(skycanvas);
+var skysz = 2048;
+skycanvas.width = skysz;
+skycanvas.height = skysz;
+var skyctx = skycanvas.getContext('2d');
+skyctx.fillStyle = "rgb(10, 0, 20)";
+skyctx.fillRect(0, 0, skysz, skysz);
+for(var i = 0; i < 5000; i++){
+    skyctx.fillStyle = "hsl(" + (Math.random() * 360) + ", " + (Math.random() *60 )+ "%,  80%)";
+    skyctx.fillRect(
+        Math.random() * skysz, 
+        Math.random() * skysz, 
+        Math.random() * 5, 
+        Math.random() * 5
+        );
+}
 noise.seed(Math.random());
-ctx.globalAlpha = 1;
 
 var wcanvas = document.createElement('canvas');
 document.body.appendChild(wcanvas);
@@ -66,52 +103,10 @@ for(var x = 0; x * scale * psize < sz; x+=step){
     }
 }
 
-//var texture = new THREE.TextureLoader().load("assets/uvs.png");
-var texture = new THREE.TextureLoader().load(canvas.toDataURL());
-texture.wrapS = THREE.MirroredRepeatWrapping;
-texture.wrapT = THREE.MirroredRepeatWrapping;
-texture.repeat.set(2, 1);
-
 var wtexture = new THREE.TextureLoader().load(wcanvas.toDataURL());
 wtexture.wrapS = THREE.MirroredRepeatWrapping;
 wtexture.wrapT = THREE.MirroredRepeatWrapping;
 wtexture.repeat.set(2, 1);
-
-var geometry = new THREE.SphereGeometry(30, 50, 50);
-//var material = new THREE.MeshNormalMaterial();
-var material = new THREE.MeshLambertMaterial( {color: 0xffffff, map: texture});
-
-//material.flatShading = true;
-var obj = new THREE.Mesh( geometry, material );
-scene.add( obj );
-
-camera.position.z = 80;
-var stats = new Stats();
-stats.showPanel(2);
-document.body.appendChild( stats.dom );
-
-var light = new THREE.PointLight( 0xffffff, 1, 300);
-light.position.set(40, 40, 70);
-scene.add(light);
-
-
-var skycanvas = document.createElement('canvas');
-document.body.appendChild(skycanvas);
-var skysz = 2048;
-skycanvas.width = skysz;
-skycanvas.height = skysz;
-var skyctx = skycanvas.getContext('2d');
-skyctx.fillStyle = "rgb(10, 0, 20)";
-skyctx.fillRect(0, 0, skysz, skysz);
-for(var i = 0; i < 5000; i++){
-    skyctx.fillStyle = "hsl(" + (Math.random() * 360) + ", " + (Math.random() *60 )+ "%,  80%)";
-    skyctx.fillRect(
-        Math.random() * skysz, 
-        Math.random() * skysz, 
-        Math.random() * 5, 
-        Math.random() * 5
-        );
-}
 
 var wgeometry = new THREE.SphereGeometry(30.01, 50, 50);
 //var material = new THREE.MeshNormalMaterial();
@@ -126,6 +121,46 @@ var wmaterial = new THREE.MeshPhongMaterial( {
 
 var wobj = new THREE.Mesh( wgeometry, wmaterial );
 scene.add( wobj );
+
+//clouds
+
+noise.seed(Math.random());
+
+var ccanvas = document.createElement('canvas');
+document.body.appendChild(ccanvas);
+ccanvas.width = sz;
+ccanvas.height = sz;
+var cctx = ccanvas.getContext('2d');
+cctx.fillStyle = debugColors? "white" : getRandomColor(); //maybe make reflective?
+
+step = 0.02;
+scale = 1/step;
+for(var x = 0; x * scale * psize < sz; x+=step){
+    for(var y = 0; y * scale * psize < sz; y+=step){
+        var a = noise.perlin2(x, y)/2 + 0.5;
+        a = Math.floor(a * 5)/10 + .2;
+        if(a > 0.4){
+            cctx.globalAlpha = a - 0.4;
+            cctx.fillRect(x * scale * psize, y * scale * psize, psize, psize);
+        }
+    }
+}
+
+var ctexture = new THREE.TextureLoader().load(ccanvas.toDataURL());
+ctexture.wrapS = THREE.MirroredRepeatWrapping;
+ctexture.wrapT = THREE.MirroredRepeatWrapping;
+ctexture.repeat.set(2, 3);
+
+var cgeometry = new THREE.SphereGeometry(31, 50, 50);
+//var material = nec THREE.MeshNormalMaterial();
+var cmaterial = new THREE.MeshLambertMaterial( {
+    color: 0xffffff, 
+    map: ctexture, 
+    transparent: true,
+});
+
+var cobj = new THREE.Mesh( cgeometry, cmaterial );
+scene.add( cobj );
 
 var image = skycanvas.toDataURL();
 var URLS = []; for(var i = 0; i < 6; i++) URLS.push(image);
@@ -149,6 +184,7 @@ var animate = function () {
     //obj.rotation.x += 0.01;
     obj.rotation.y += 0.01;
     wobj.rotation.y += 0.01;
+    cobj.rotation.y += 0.012;
 
     renderer.render(scene, camera);
 };
