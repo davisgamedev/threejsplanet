@@ -121,6 +121,10 @@ var skymesh = new THREE.Mesh(
 )
 scene.add(skymesh);
 
+var controls = new THREE.OrbitControls( camera, renderer.domElement );
+controls.enableZoom = false;
+controls.minPolarAngle = Math.PI/2;
+controls.maxPolarAngle = Math.PI/2;
 
 //document.body.appendChild( THREE.UVsDebug( geometry, 2048));
 
