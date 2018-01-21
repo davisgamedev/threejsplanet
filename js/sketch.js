@@ -41,18 +41,17 @@ for(var x = 0; x * scale * psize < sz; x+=step){
 }
 
 
-//if 1 water -could- cover whole thing at least lightly
-//
-//values for water should only go up to that number, higher is flattend
-//can reduce value after
-
-var waterAlpha = .2;//debugColors? 1 : (Math.random() * .6) + 0.4;
-ctx.fillStyle = debugColors? "blue" : getRandomColor(); //maybe make reflective?
-
 //if(!debugColors && Math.random() > 0.3 ) ctx.globalCompositeOperation = 'lighter'; 
 //ctx.globalCompositeOperation = 'lighter';
 noise.seed(Math.random());
 ctx.globalAlpha = 1;
+
+var wcanvas = document.createElement('canvas');
+document.body.appendChild(wcanvas);
+wcanvas.width = sz;
+wcanvas.height = sz;
+var wctx = wcanvas.getContext('2d');
+wctx.fillStyle = debugColors? "blue" : getRandomColor(); //maybe make reflective?
 
 step = 0.02;
 scale = 1/step;
@@ -61,8 +60,8 @@ for(var x = 0; x * scale * psize < sz; x+=step){
         var a = noise.perlin2(x, y)/2 + 0.5;
         a = Math.floor(a * 5)/10 + .2;
         if(a > 0.4){
-            ctx.globalAlpha = a - .1;
-            ctx.fillRect(x * scale * psize, y * scale * psize, psize, psize);
+            wctx.globalAlpha = a;
+            wctx.fillRect(x * scale * psize, y * scale * psize, psize, psize);
         }
     }
 }
@@ -72,6 +71,11 @@ var texture = new THREE.TextureLoader().load(canvas.toDataURL());
 texture.wrapS = THREE.MirroredRepeatWrapping;
 texture.wrapT = THREE.MirroredRepeatWrapping;
 texture.repeat.set(2, 1);
+
+var wtexture = new THREE.TextureLoader().load(wcanvas.toDataURL());
+wtexture.wrapS = THREE.MirroredRepeatWrapping;
+wtexture.wrapT = THREE.MirroredRepeatWrapping;
+wtexture.repeat.set(2, 1);
 
 var geometry = new THREE.SphereGeometry(30, 50, 50);
 //var material = new THREE.MeshNormalMaterial();
@@ -109,17 +113,27 @@ for(var i = 0; i < 5000; i++){
         );
 }
 
-var skyTexture = new THREE.TextureLoader().load(skycanvas.toDataURL());
-var skymesh = new THREE.Mesh(
-    new THREE.BoxGeometry( 1000, 1000, 1000, 1, 1, 1),
-    new THREE.MeshBasicMaterial({
-        color: 0xffffff,
-        map: skyTexture,
-        side: THREE.BackSide,
-        lights: false,
-    })
-)
-scene.add(skymesh);
+var wgeometry = new THREE.SphereGeometry(30.01, 50, 50);
+//var material = new THREE.MeshNormalMaterial();
+var wmaterial = new THREE.MeshPhongMaterial( {
+    color: 0xffffff, 
+    map: wtexture, 
+    combine: THREE.MixOperation,
+    reflectivity: 0.5,
+    transparent: true,
+    shininess: 100
+});
+
+var wobj = new THREE.Mesh( wgeometry, wmaterial );
+scene.add( wobj );
+
+var image = skycanvas.toDataURL();
+var URLS = []; for(var i = 0; i < 6; i++) URLS.push(image);
+var textureCube = new THREE.CubeTextureLoader().load(URLS, () => {
+    wmaterial.envMap = textureCube;
+    wmaterial.needsUpdate = true;
+});
+scene.background = textureCube;
 
 var controls = new THREE.OrbitControls( camera, renderer.domElement );
 controls.enableZoom = false;
@@ -134,6 +148,7 @@ var animate = function () {
 
     //obj.rotation.x += 0.01;
     obj.rotation.y += 0.01;
+    wobj.rotation.y += 0.01;
 
     renderer.render(scene, camera);
 };
