@@ -1,7 +1,7 @@
 //set up render elements
 var scene = new THREE.Scene();
 var camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1000 );
-camera.position.z = 80;
+camera.position.z = 60;
 
 var renderer = new THREE.WebGLRenderer();
 renderer.setSize( window.innerWidth, window.innerHeight );
@@ -13,8 +13,11 @@ scene.add(light);
 
 var controls = new THREE.OrbitControls( camera, renderer.domElement );
 controls.enableZoom = false;
+controls.enableKeys = false;
 controls.minPolarAngle = Math.PI/2;
 controls.maxPolarAngle = Math.PI/2;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.8;
 
 var stats = new Stats();
 stats.showPanel(2);
@@ -25,8 +28,6 @@ document.body.appendChild( stats.dom );
 var debugColors = false;
 var debugTexutures = true;
 
-
-
 ////////////////////body//////////////////////////
 var canvas = document.createElement('canvas');
 document.body.appendChild(canvas);
@@ -35,13 +36,16 @@ canvas.width = sz;
 canvas.height = sz;
 var ctx = canvas.getContext('2d');
 
-
+var h1 = Math.random() * 360;
 ctx.fillStyle = debugColors? "yellow": getRandomColor();
+console.log(ctx.fillStyle);
 ctx.fillRect(0, 0, sz, sz);
 
+//prevent blending by getting hsb color at least 40deg away
+var h2 = (h1 + 180 + (Math.random() * 180)) % 360;
 noise.seed(Math.random());
 ctx.fillStyle = debugColors? "green": getRandomColor();
-
+console.log(ctx.fillStyle);
 var psize = 5; //"pixel" size of noise
 
 for(var x = 0; x < 1; x += psize/sz){
@@ -49,7 +53,7 @@ for(var x = 0; x < 1; x += psize/sz){
         //var a = noise.perlin2(x, y)/2 + 0.5;
         var a = getTileableNoise(noise, x, y, 1);
 
-        a = Math.floor(a * 5)/10 + .2;
+        a = Math.floor(a * 5)/10 + 0.2;
         ctx.globalAlpha = a;
         ctx.fillRect(x * sz, y * sz, psize, psize);
     }
@@ -71,8 +75,8 @@ scene.add( obj );
 
 
 
-//////////////////////////////Water Texture/////////////////////////////////
-
+//////////////////////////////Water and City Texture/////////////////////////////////
+//add city lights to water layer where shallow enough
 noise.seed(Math.random());
 
 var wcanvas = document.createElement('canvas');
@@ -82,18 +86,34 @@ wcanvas.height = sz;
 var wctx = wcanvas.getContext('2d');
 wctx.fillStyle = debugColors? "blue" : getRandomColor(); //maybe make reflective?
 
+var lcanvas = document.createElement('canvas');
+document.body.appendChild(lcanvas);
+lcanvas.width = sz;
+lcanvas.height = sz;
+var lctx = lcanvas.getContext('2d');
+lctx.fillStyle = "white";
 
-var scale = Number(Math.random().toFixed(1)) + 0.1;
+var scale = Number(Math.random().toFixed(1)) + 0.2;
 if(scale > 1) scale = 1;
 for(var x = 0; x < 1; x += psize/sz){
     for(var y = 0; y < 1; y += psize/sz){
         //var a = noise.perlin2(x, y)/2 + 0.5;
         var a = getTileableNoise(noise, x, y, scale);
         
-        a = Math.floor(a * 5)/10 + .2;
-        if(a > 0.4){
-            wctx.globalAlpha = a + .2;
-            //cctx.fillRect(x * scale * psize, y * scale * psize, psize, psize);
+        if(a <= .6){
+            //probability of city: random + adjustment < (distance to equator + distance to coast(weighted))
+            var d_equator = 1 - Math.abs(y - 0.5)*2; //distance to equator
+            var c_spread = 0.55; //spread away from coast, out of .6
+            var frequency = 0.7; //modifies chance of event occuring
+            if(Math.random() + frequency < (d_equator + 2*(a/c_spread))/3 ) {
+        
+                lctx.globalAlpha = .8;
+                lctx.fillRect( x*sz, y*sz, psize, psize);
+            }
+        }
+        else if( a > .6){
+            a = Math.floor(a * 5)/10;
+            wctx.globalAlpha = a + .3;
             wctx.fillRect(x * sz, y * sz, psize, psize);
         }
     }
@@ -105,64 +125,86 @@ wtexture.wrapT = THREE.RepeatWrapping;
 wtexture.repeat.set(3, 1);
 if(!debugTexutures) wcanvas.style.display = "none";
 
+var ltexture = new THREE.TextureLoader().load(lcanvas.toDataURL());
+ltexture.wrapS = THREE.RepeatWrapping;
+ltexture.wrapT = THREE.RepeatWrapping;
+ltexture.repeat.set(3, 1);
+if(!debugTexutures) lcanvas.style.display = "none";
+
 var wgeometry = new THREE.SphereGeometry(30.01, 50, 50);
 //var material = new THREE.MeshNormalMaterial();
 var wmaterial = new THREE.MeshPhongMaterial( {
     color: 0xffffff, 
     map: wtexture, 
+    //emissiveMap: wtexture, //radioactive lakes lol
     combine: THREE.MixOperation,
     reflectivity: 0.5,
     transparent: true,
     shininess: 100
 });
-
 var wobj = new THREE.Mesh( wgeometry, wmaterial );
 scene.add( wobj );
 
-//clouds
+var tobj = new THREE.Mesh(
+    new THREE.SphereGeometry(30.01, 50, 50),
+    new THREE.MeshBasicMaterial( {
+        transparent: true,
+        map: ltexture,
+        color: assembleHSB(Math.random() * 360, 100, 80)
+    })
+)
+scene.add(tobj);
 
-noise.seed(Math.random());
+
 /////////////////////////////////Clouds///////////////////////////
-var ccanvas = document.createElement('canvas');
-document.body.appendChild(ccanvas);
-ccanvas.width = sz;
-ccanvas.height = sz;
-var cctx = ccanvas.getContext('2d');
-cctx.fillStyle = debugColors? "white" : getRandomColor(); 
+var clouds = [];
+var h = Math.random() * 360;
+for(var i = 0; i < 3; i++){
+    noise.seed(Math.random());
 
-for(var x = 0; x < 1; x += psize/sz){
-    for(var y = 0; y < 1; y += psize/sz){
-        var a = getTileableNoise(noise, x, y, 1);
-
-        a = Math.floor(a * 5)/10 + .2;
-        if(a > 0.3){
-            cctx.globalAlpha =  a - 0.2;
-            cctx.fillRect(x * sz, y * sz, psize, psize);
+    var ccanvas = document.createElement('canvas');
+    document.body.appendChild(ccanvas);
+    ccanvas.width = sz;
+    ccanvas.height = sz;
+    var cctx = ccanvas.getContext('2d');
+    cctx.strokeStyle = "rgba(0, 0, 0, 0)";
+    cctx.fillStyle = debugColors? "white" : assembleHSB(h, 80, 60 + i*20); 
+    
+    for(var x = 0; x < 1; x += psize/sz){
+        for(var y = 0; y < 1; y += psize/sz){
+            var a = getTileableNoise(noise, x, y, .8/((2-i)+1));
+    
+            a = Math.floor(a * 5)/10 + .2;
+            if(a > 0.4){
+                cctx.globalAlpha =  a - 0.2;
+                cctx.fillRect(x * sz, y * sz, psize, psize);
+            }
         }
     }
+    
+    var ctexture = new THREE.TextureLoader().load(ccanvas.toDataURL());
+    ctexture.wrapS = THREE.RepeatWrapping;
+    ctexture.wrapT = THREE.RepeatWrapping;
+    ctexture.repeat.set(1, 2);
+    if(!debugTexutures) ccanvas.style.display = "none";   
+
+    var cobj = new THREE.Mesh( 
+        new THREE.SphereGeometry(30.5 + (i/4), 50, 50), 
+        new THREE.MeshLambertMaterial( {
+            color: 0xffffff, 
+            map: ctexture, 
+            transparent: true
+        }) 
+    );
+    scene.add( cobj );
+
+    clouds.push(cobj);
 }
 
-var ctexture = new THREE.TextureLoader().load(ccanvas.toDataURL(), () => {
-    wmaterial.envMap = ctexture;
-    wmaterial.needsUpdate = true;
-});
-ctexture.wrapS = THREE.RepeatWrapping;
-ctexture.wrapT = THREE.RepeatWrapping;
-ctexture.repeat.set(1, 2);
-if(!debugTexutures) ccanvas.style.display = "none";
 
-var cgeometry = new THREE.SphereGeometry(30.5, 50, 50);
-//var material = nec THREE.MeshNormalMaterial();
-var cmaterial = new THREE.MeshLambertMaterial( {
-    color: 0xffffff, 
-    map: ctexture, 
-    transparent: true,
-});
 
-var cobj = new THREE.Mesh( cgeometry, cmaterial );
-scene.add( cobj );
 
-//skybox
+//////////////////////////////////////////skybox/////////////////////////////////////
 noise.seed(Math.random());
 var skycanvas = document.createElement('canvas');
 document.body.appendChild(skycanvas);
@@ -175,11 +217,12 @@ skyctx.fillStyle = "rgb(10, 0, 20)";
 skyctx.fillRect(0, 0, skysz, skysz);
 for(var i = 0; i < 5000; i++){
     skyctx.fillStyle = "hsl(" + (Math.random() * 360) + ", " + (Math.random() *60 )+ "%,  80%)";
+    var starsize = Math.random() * 5;
     skyctx.fillRect(
         Math.random() * skysz, 
         Math.random() * skysz, 
-        Math.random() * 5, 
-        Math.random() * 5
+        starsize,
+        starsize
         );
 }
 
@@ -200,10 +243,15 @@ var animate = function () {
     requestAnimationFrame( animate );
 
     //obj.rotation.x += 0.01;
-    obj.rotation.y += 0.01;
-    wobj.rotation.y += 0.01;
-    cobj.rotation.y += 0.005;
+    obj.rotation.y += 0.005;
+    wobj.rotation.y += 0.005;
+    tobj.rotation.y += 0.005;
 
+    for(var i = 0; i < clouds.length; i++){
+        clouds[i].rotation.y += 0.005 + 2*i/1000;
+    }
+    
+    controls.update();
     renderer.render(scene, camera);
 };
 

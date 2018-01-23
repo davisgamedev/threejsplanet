@@ -5,6 +5,17 @@ function getRandomColor(){
     return 'rgb(' + r + ',' + g + ',' + b + ')';
 }
 
+function getRandomHSB(h){
+    if(!h) h = Math.random()*360|0;
+    var s = Math.random()*100|0;
+    var b = Math.random()*100|0;
+    return 'hsl(' + h + ',' + s + '%,' + b + '%)';
+}
+
+function assembleHSB(h, s, b){
+    return 'hsl(' + h + ',' + s + '%,' + b + '%)';
+}
+
 function getTileableNoise(noise, x, y, scale){
     //wrap 2d perlin around 3d torus for tileable
     //https://gamedev.stackexchange.com/questions/23625/how-do-you-generate-tileable-perlin-noise/23679#23679
