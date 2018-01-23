@@ -1,7 +1,7 @@
 //set up render elements
 var scene = new THREE.Scene();
 var camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1000 );
-camera.position.z = 60;
+camera.position.z = 70;
 
 var renderer = new THREE.WebGLRenderer();
 renderer.setSize( window.innerWidth, window.innerHeight );
@@ -26,7 +26,8 @@ document.body.appendChild( stats.dom );
 
 //control vars
 var debugColors = false;
-var debugTexutures = true;
+var debugTexutures = false;
+
 
 ////////////////////body//////////////////////////
 var canvas = document.createElement('canvas');
@@ -72,7 +73,12 @@ var material = new THREE.MeshLambertMaterial( {color: 0xffffff, map: texture});
 var obj = new THREE.Mesh( geometry, material );
 scene.add( obj );
 
+/*
+    TODO: optomizations
+        - recycle noise maps
+        - random value arrays
 
+*/
 
 
 //////////////////////////////Water and City Texture/////////////////////////////////
@@ -107,7 +113,7 @@ for(var x = 0; x < 1; x += psize/sz){
             var frequency = 0.7; //modifies chance of event occuring
             if(Math.random() + frequency < (d_equator + 2*(a/c_spread))/3 ) {
         
-                lctx.globalAlpha = .8;
+                lctx.globalAlpha = Math.random(); 
                 lctx.fillRect( x*sz, y*sz, psize, psize);
             }
         }
@@ -168,7 +174,7 @@ for(var i = 0; i < 3; i++){
     ccanvas.height = sz;
     var cctx = ccanvas.getContext('2d');
     cctx.strokeStyle = "rgba(0, 0, 0, 0)";
-    cctx.fillStyle = debugColors? "white" : assembleHSB(h, 80, 60 + i*20); 
+    cctx.fillStyle = debugColors? "white" : assembleHSB(h, 80, 60 + i*40); 
     
     for(var x = 0; x < 1; x += psize/sz){
         for(var y = 0; y < 1; y += psize/sz){
