@@ -26,7 +26,7 @@ document.body.appendChild( stats.dom );
 
 //control vars
 var debugColors = false;
-var debugTexutures = false;
+var debugTexutures = true;
 
 
 ////////////////////body//////////////////////////
@@ -98,6 +98,7 @@ lcanvas.width = sz;
 lcanvas.height = sz;
 var lctx = lcanvas.getContext('2d');
 lctx.fillStyle = "white";
+lctx.strokeStyle = "white";
 
 var scale = Number(Math.random().toFixed(1)) + 0.2;
 if(scale > 1) scale = 1;
@@ -110,11 +111,32 @@ for(var x = 0; x < 1; x += psize/sz){
             //probability of city: random + adjustment < (distance to equator + distance to coast(weighted))
             var d_equator = 1 - Math.abs(y - 0.5)*2; //distance to equator
             var c_spread = 0.55; //spread away from coast, out of .6
-            var frequency = 0.7; //modifies chance of event occuring
+            var frequency = .75; //modifies chance of event occuring, higher is less likely
             if(Math.random() + frequency < (d_equator + 2*(a/c_spread))/3 ) {
         
                 lctx.globalAlpha = Math.random(); 
-                lctx.fillRect( x*sz, y*sz, psize, psize);
+
+                lctx.fillRect( x*sz - psize/2, y*sz, Math.random() * psize, Math.random() * psize);
+                lctx.fillRect( x*sz - psize/2, y*sz - psize/2, Math.random() * psize, Math.random() * psize);
+                lctx.fillRect( x*sz, y*sz - psize/2, Math.random() * psize, Math.random() * psize);
+                lctx.fillRect( x*sz, y*sz, Math.random() * psize, Math.random() * psize);
+                
+                lctx.globalAlpha -= 0.2;
+                lctx.beginPath();
+                lctx.moveTo(x*sz, y*sz);
+                if(flipCoin(0.75)){
+                    var ex = x*sz + psize*randomRange(-10, 10);
+                    var ey = y*sz + psize*randomRange(-10, 10);
+                    if(getTileableNoise(noise, ex/sz, ey/sz, scale) > 0.6) continue;
+                    lctx.bezierCurveTo(randomRange(x*sz, ex), randomRange(y*sz, ey), randomRange(x*sz, ex), randomRange(y*sz, ey) , ex, ey);
+                }
+                else{
+                    var ex = x*sz + psize*randomRange(-5, 5);
+                    var ey = y*sz + psize*randomRange(-5, 5);
+                    lctx.lineTo(ex, ey);
+                }
+                lctx.lineTo(ex, ey);
+                lctx.stroke();
             }
         }
         else if( a > .6){
@@ -127,7 +149,7 @@ for(var x = 0; x < 1; x += psize/sz){
 
 var wtexture = new THREE.TextureLoader().load(wcanvas.toDataURL());
 wtexture.wrapS = THREE.RepeatWrapping;
-wtexture.wrapT = THREE.RepeatWrapping;
+wtexture.wrapT = THREE.Re1peatWrapping;
 wtexture.repeat.set(3, 1);
 if(!debugTexutures) wcanvas.style.display = "none";
 

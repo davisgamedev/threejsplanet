@@ -31,3 +31,15 @@ function getTileableNoise(noise, x, y, scale){
     var zt = at * Math.sin(2 * Math.PI * y);
     return noise.perlin3( xt*scale, yt*scale, zt*scale)/2 + 0.5 ; // torus
 }
+
+function randomVariationRange(source, minVar, maxVar){
+    return randomRange(source + from, source + to);
+}
+
+function randomRange(from, to){
+    return Math.random() * (to-from) + from;
+}
+
+function flipCoin(chanceSuccess){
+    return Math.random() < chanceSuccess;
+}
