@@ -33,7 +33,7 @@ function getTileableNoise(noise, x, y, scale){
 }
 
 function randomVariationRange(source, minVar, maxVar){
-    return randomRange(source + from, source + to);
+    return randomRange(source * minVar, source * maxVar);
 }
 
 function randomRange(from, to){

@@ -112,31 +112,30 @@ for(var x = 0; x < 1; x += psize/sz){
             var d_equator = 1 - Math.abs(y - 0.5)*2; //distance to equator
             var c_spread = 0.55; //spread away from coast, out of .6
             var frequency = .75; //modifies chance of event occuring, higher is less likely
-            if(Math.random() + frequency < (d_equator + 2*(a/c_spread))/3 ) {
-        
+            if(Math.random() + frequency < (d_equator + 2*(a/c_spread))/3) {
+                if(flipCoin(0.3)) continue;
+
                 lctx.globalAlpha = Math.random(); 
 
                 lctx.fillRect( x*sz - psize/2, y*sz, Math.random() * psize, Math.random() * psize);
                 lctx.fillRect( x*sz - psize/2, y*sz - psize/2, Math.random() * psize, Math.random() * psize);
                 lctx.fillRect( x*sz, y*sz - psize/2, Math.random() * psize, Math.random() * psize);
-                lctx.fillRect( x*sz, y*sz, Math.random() * psize, Math.random() * psize);
+                lctx.fillRect( x*sz, y*sz, randomVariationRange(psize, 0, 2), randomVariationRange(psize, 0, 2));
                 
+                if(flipCoin(0.85)) continue;
                 lctx.globalAlpha -= 0.2;
-                lctx.beginPath();
-                lctx.moveTo(x*sz, y*sz);
-                if(flipCoin(0.75)){
-                    var ex = x*sz + psize*randomRange(-10, 10);
-                    var ey = y*sz + psize*randomRange(-10, 10);
-                    if(getTileableNoise(noise, ex/sz, ey/sz, scale) > 0.6) continue;
+
+                for(var i = randomRange(1, 8); i >= 0; i--){
+                    lctx.beginPath();
+                    lctx.moveTo(x*sz, y*sz);
+                    var ex = x*sz + psize*randomRange(-12, 12);
+                    var ey = y*sz + psize*randomRange(-12, 12);
+                    if(getTileableNoise(noise, ex/sz, ey/sz, scale) > 0.6 || getTileableNoise(noise, (ex/sz + x)/2, (ey/sz + y)/2, scale) > 0.6) break;
                     lctx.bezierCurveTo(randomRange(x*sz, ex), randomRange(y*sz, ey), randomRange(x*sz, ex), randomRange(y*sz, ey) , ex, ey);
-                }
-                else{
-                    var ex = x*sz + psize*randomRange(-5, 5);
-                    var ey = y*sz + psize*randomRange(-5, 5);
                     lctx.lineTo(ex, ey);
+                    lctx.stroke();
                 }
-                lctx.lineTo(ex, ey);
-                lctx.stroke();
+                
             }
         }
         else if( a > .6){
