@@ -16,7 +16,56 @@ function assembleHSB(h, s, b){
     return 'hsl(' + h + ',' + s + '%,' + b + '%)';
 }
 
-function getTileableNoise(noise, x, y, scale){
+function randomVariationRange(source, minVar, maxVar){
+    return randomRange(source * minVar, source * maxVar);
+}
+
+function randomRange(from, to){
+    return Math.random() * (to-from) + from;
+}
+
+function flipCoin(chanceSuccess){
+    return Math.random() < chanceSuccess;
+}
+
+
+/////////////////////////NoiseOptomization/////////////////
+var resources;
+var noiseTable;
+
+function newNoiseResource(){
+    if(!optimizeNoise) noise.seed(Math.random());
+    else{
+        if(resources == undefined){
+            $.getJSON("data/resources.json", function(json){
+                
+                resources = json.resources;
+                console.log(resources);
+            });
+            console.log(resources);
+        }
+        if(generateNoiseTables > 0){
+            for(var i = 0; i < generateNoiseTables; i++){
+                var meta = {
+                    id: "noiseTable_" + resources.noiseTables.length + ".csv",
+                    size: canvasSize
+                };
+                resources.noiseTables.push(meta);
+
+                $("#dataTitle").html("resources.json");
+                $("#dataBody").html(JSON.stringify(resources));
+                $("#dataModal").modal();
+            }
+        }
+    }
+}
+
+function fetchTileableNoise(x, y, scale){
+    
+}
+
+
+function getTileableNoise(x, y, scale){
     //wrap 2d perlin around 3d torus for tileable
     //https://gamedev.stackexchange.com/questions/23625/how-do-you-generate-tileable-perlin-noise/23679#23679
     var ct = 1;
@@ -30,16 +79,4 @@ function getTileableNoise(noise, x, y, scale){
 
     var zt = at * Math.sin(2 * Math.PI * y);
     return noise.perlin3( xt*scale, yt*scale, zt*scale)/2 + 0.5 ; // torus
-}
-
-function randomVariationRange(source, minVar, maxVar){
-    return randomRange(source * minVar, source * maxVar);
-}
-
-function randomRange(from, to){
-    return Math.random() * (to-from) + from;
-}
-
-function flipCoin(chanceSuccess){
-    return Math.random() < chanceSuccess;
 }
