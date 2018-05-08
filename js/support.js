@@ -33,29 +33,34 @@ function flipCoin(chanceSuccess){
 var resources;
 var noiseTable;
 
+function makeNoiseTables(){
+    if(generateNoiseTables > 0){
+        for(var i = 0; i < generateNoiseTables; i++){
+            var meta = {
+                id: "noiseTable_" + resources.noiseTables.length + ".csv",
+                size: canvasSize
+            };
+            resources.noiseTables.push(meta);
+
+            $("#dataExportModalLabel").html("resources.json");
+            $("#dataExportModalBody").html(JSON.stringify(resources));
+            $("#dataExportModal").modal("show");
+        }
+    }
+}
+
 function newNoiseResource(){
-    if(!optimizeNoise) noise.seed(Math.random());
+    if(!optimizeNoise){
+        noise.seed(Math.random());
+        return;
+    }
     else{
         if(resources == undefined){
             $.getJSON("data/resources.json", function(json){
-                
                 resources = json.resources;
-                console.log(resources);
-            });
-            console.log(resources);
-        }
-        if(generateNoiseTables > 0){
-            for(var i = 0; i < generateNoiseTables; i++){
-                var meta = {
-                    id: "noiseTable_" + resources.noiseTables.length + ".csv",
-                    size: canvasSize
-                };
-                resources.noiseTables.push(meta);
+            }).done(makeNoiseTables);
 
-                $("#dataTitle").html("resources.json");
-                $("#dataBody").html(JSON.stringify(resources));
-                $("#dataModal").modal();
-            }
+
         }
     }
 }

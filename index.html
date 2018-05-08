@@ -1,38 +1,48 @@
 <html>
 	<head>
 		<title>Planet three.js</title>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 		<style>
 			body { margin: 0; background: black;}
 			canvas { width: 100%; height: 100% }
 		</style>
-	</head>
-	<body>
-		<!-- Modal -->
-		<div class="modal fade" id="dataExportModal" tabindex="-1" role="dialog">
-			<div class="modal-dialog" role="document">
-			<div class="modal-content">
-				<div class="modal-header">
-					<h5 class="modal-title" id="dataTitle">Modal title</h5>
-					<button type="button" class="close" data-dismiss="modal"></button>
-				</div>
-				<div class="modal-body" id="dataBody"></div>
-				<div class="modal-footer">
-					<button type="button" id="continueButton" class="btn btn-secondary" data-dismiss="modal">Continue</button>
-				</div>
-			</div>
-			</div>
-		</div>
-
 		<script src="js/libs/three.min.js"></script>
 		<script src="js/libs/jquery.min.js"></script>
+
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
         <!-- <script src="js/libs/UVsDebug.js"></script> -->
 		<script src="js/libs/stats.min.js"></script>
 		<script src="js/libs/perlin.js"></script>
 		<script src="js/libs/OrbitControls.js"></script>
 
-		<script src="js/settings.js"></script>
-		<script src="js/support.js"></script>
-		<script src="js/planet.js"></script>
-        <script src="js/sketch.js"></script>
+	</head>
+	<body>
+		
+
+		<!-- Modal -->
+		<div class="modal fade" id="dataExportModal" tabindex="-1" role="dialog" aria-labelledby="dataExportModalLabel" aria-hidden="true">
+				<div class="modal-dialog" role="document">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h5 class="modal-title" id="dataExportModalLabel">Modal title</h5>
+							<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+								<span aria-hidden="true">&times;</span>
+							</button>
+						</div>
+						<div class="modal-body" id="dataExportModalBody"></div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary" id="continueButton" data-dismiss="modal">Close</button>
+							<button type="button" class="btn btn-primary">Save changes</button>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<script src="js/settings.js"></script>
+			<script src="js/support.js"></script>
+			<script src="js/planet.js"></script>
+			<script src="js/sketch.js"></script>
 	</body>
 </html>
