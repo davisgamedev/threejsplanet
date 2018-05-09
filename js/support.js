@@ -52,16 +52,14 @@ function createNoiseTableImage(tableNoiseScale){
     var ctx = canvas.getContext('2d');
 
     var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    var data = imageData.data;
 
     for(var channel = 0; channel < 4; channel++){
-        var channelScale = (channel < 3) ? 256 : 1;
         noise.seed(Math.random());
         for(var x = 0; x < canvas.width; x++){
             for(var y = 0; y < canvas.height; y++){
-                data[ (y * canvas.height) + x + channel] = 
+                imageData.data[ (y * canvas.height*4) + (x*4) + channel] = 
                     getTileableNoise(x/canvasSize, y/canvasSize, tableNoiseScale)
-                    * channelScale;
+                    * 256;
             }
         }
     }
