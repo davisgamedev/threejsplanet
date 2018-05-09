@@ -33,21 +33,78 @@ function flipCoin(chanceSuccess){
 var resources;
 var noiseTable;
 
-function makeNoiseTables(){
-    if(generateNoiseTables > 0){
-        for(var i = 0; i < generateNoiseTables; i++){
-            var meta = {
-                id: "noiseTable_" + resources.noiseTables.length + ".csv",
-                size: canvasSize
-            };
-            resources.noiseTables.push(meta);
+function emitResourcesJSON(){
+    $("#dataExportModalLabel").html("resources.json");
+    $("#dataExportModalBody").html(JSON.stringify(resources));
+    $("#dataExportModal").modal("show");
+}
 
-            $("#dataExportModalLabel").html("resources.json");
-            $("#dataExportModalBody").html(JSON.stringify(resources));
-            $("#dataExportModal").modal("show");
+
+//new plan: build png, save four tables per png: r, g, b, a
+
+
+function createNoiseTableImage(tableNoiseScale){
+
+    var canvas = document.createElement('canvas');
+    document.body.appendChild(canvas);
+    canvas.width = canvasSize;
+    canvas.height = canvasSize;
+    var ctx = canvas.getContext('2d');
+
+    var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    var data = imageData.data;
+
+    for(var channel = 0; channel < 4; channel++){
+        var channelScale = (channel < 3) ? 256 : 1;
+        noise.seed(Math.random());
+        for(var x = 0; x < canvas.width; x++){
+            for(var y = 0; y < canvas.height; y++){
+                data[ (y * canvas.height) + x + channel] = 
+                    getTileableNoise(x/canvasSize, y/canvasSize, tableNoiseScale)
+                    * channelScale;
+            }
         }
     }
+
+    ctx.putImageData(imageData, 0, 0);
+    canvas.style.display = "none"; 
+    return canvas.toDataURL();
 }
+
+
+function createNoiseTableHelper(){
+    if(currentNoiseTable > 0){
+
+        currentNoiseTable--;
+
+        tableNoiseScale = 1;
+        if(currentNoiseTable <= generateScaledNoiseTables ){
+            tableNoiseScale = currentNoiseTable* .2;
+        }
+
+        var meta = {
+            url: "noiseTableBundle_" + resources.noiseTables.length + ".csv",
+            size: canvasSize,
+            scale: tableNoiseScale
+        };
+        resources.noiseTables.push(meta);
+
+        var imageSrc = createNoiseTableImage(tableNoiseScale);
+
+        $("#dataExportModalLabel").html(meta.url);
+        $("#dataExportModalBody").html("<img src='" + imageSrc + "'>");
+        $("#dataExportModal").modal("show");
+        $("#dataExportModal").on("hidden.bs.modal",
+            currentNoiseTable > 0 ? createNoiseTableHelper : emitResourcesJSON);
+    }
+}
+
+var currentNoiseTable = 0;
+function createNoiseTables(){
+    currentNoiseTable = generateNoiseTables;
+    createNoiseTableHelper();
+}
+
 
 function newNoiseResource(){
     if(!optimizeNoise){
@@ -56,11 +113,10 @@ function newNoiseResource(){
     }
     else{
         if(resources == undefined){
+            optimizeNoise = false; //allow threads to continue during generation phase
             $.getJSON("data/resources.json", function(json){
                 resources = json.resources;
-            }).done(makeNoiseTables);
-
-
+            }).done(createNoiseTables);
         }
     }
 }
