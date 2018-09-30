@@ -12,12 +12,15 @@ light.position.set(40, 40, 70);
 scene.add(light);
 
 var controls = new THREE.OrbitControls( camera, renderer.domElement );
-controls.enableZoom = false;
-controls.enableKeys = false;
-controls.minPolarAngle = Math.PI/2;
-controls.maxPolarAngle = Math.PI/2;
-controls.autoRotate = true;
-controls.autoRotateSpeed = 0.8;
+Object.assign(controls, {
+    enableZoom: false,
+    enableKeys: false,
+    minPolarAngle: Math.PI/2,
+    maxPolarAngle: Math.PI/2,
+    autoRotate: true,
+    autoRotateSpeed: 0.8,
+});
+
 
 var stats = new Stats();
 stats.showPanel(2);
