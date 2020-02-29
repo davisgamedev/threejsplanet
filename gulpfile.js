@@ -1,13 +1,21 @@
-var gulp        = require('gulp');
-var browserSync = require('browser-sync').create();
+var gulp = require('gulp');
+var fallback = require("connect-history-api-fallback");
+var bs= require('browser-sync').create();
 
-// Static server
-gulp.task('browser-sync', function() {
-    browserSync.init({
+
+function start() {
+    bs.init({
         server: {
-            baseDir: "./"
+            baseDir: "./",
+            middleware: [ fallback() ]
         }
     });
-});
+    bs.reload();
+}
 
-gulp.task('dev', ['browser-sync']);
+gulp.task('serve', function(done) {// .init starts the server
+    start();
+
+    gulp.watch(["./*"]).on("change", bs.reload);
+    done();
+});
